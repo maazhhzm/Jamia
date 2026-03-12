@@ -1,0 +1,706 @@
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#047857">
+    <title>تطبيق الجمعية الذكي</title>
+    <style>
+        :root {
+            --primary: #059669; /* Emerald 600 */
+            --primary-dark: #064e3b;
+            --accent: #fbbf24; /* Amber 400 */
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --danger: #ef4444;
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 16px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Segoe UI', 'Tahoma', Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 90px; /* Space for nav */
+            line-height: 1.6;
+        }
+
+        /* --- Header --- */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 2rem 1rem 1.5rem;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+        }
+        .app-title { font-size: 1.8rem; margin: 0; font-weight: 800; }
+        .current-hijri-month {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            backdrop-filter: blur(5px);
+        }
+
+        /* --- Layout & Containers --- */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* --- Cards --- */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); }
+        .card h3 {
+            margin: 0 0 1rem 0;
+            color: var(--primary);
+            font-size: 1.25rem;
+            border-bottom: 2px solid #f0fdf4;
+            padding-bottom: 0.5rem;
+        }
+
+        /* --- Stats Grid --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+        .stat-item {
+            background: #ecfdf5;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #d1fae5;
+        }
+        .stat-val { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+        .stat-lbl { font-size: 0.85rem; color: var(--text-light); }
+
+        /* --- Forms --- */
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #fff;
+            transition: border-color 0.3s;
+        }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+        
+        /* --- Buttons --- */
+        .btn {
+            display: inline-flex; justify-content: center; align-items: center;
+            width: 100%; padding: 0.8rem;
+            border: none; border-radius: 10px;
+            font-size: 1rem; font-weight: bold; cursor: pointer;
+            transition: all 0.2s; gap: 8px;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.3); }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-danger { background: #fee2e2; color: var(--danger); }
+        .btn-sm { width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+
+        /* --- Lists & Tables --- */
+        .member-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.8rem 0; border-bottom: 1px solid var(--border);
+        }
+        .member-row:last-child { border-bottom: none; }
+        .member-info h4 { margin: 0 0 4px 0; font-size: 1rem; }
+        .member-details { font-size: 0.8rem; color: var(--text-light); }
+        
+        .table-responsive { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; background: white; }
+        th, td { padding: 12px; text-align: right; border-bottom: 1px solid var(--border); }
+        th { background: #f9fafb; font-weight: 600; color: var(--text-light); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+
+        /* --- Navigation --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; padding: 8px 0;
+            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+        .nav-btn {
+            background: none; border: none;
+            color: var(--text-light); font-size: 0.75rem;
+            display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; flex: 1; transition: color 0.3s;
+        }
+        .nav-btn i { font-size: 1.4rem; margin-bottom: 4px; font-style: normal; }
+        .nav-btn.active { color: var(--primary); }
+
+        /* --- Utilities --- */
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; display: inline-block;}
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef3c7; color: #92400e; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .hidden { display: none !important; }
+        
+        /* --- Current Turn Highlight --- */
+        .turn-card {
+            border: 2px solid var(--accent);
+            background: linear-gradient(to bottom, #fffbeb, #ffffff);
+        }
+        .turn-amount { font-size: 2rem; color: var(--primary); font-weight: 800; margin: 10px 0; }
+
+        /* --- Toast --- */
+        .toast {
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+            background: #1f2937; color: white; padding: 12px 24px;
+            border-radius: 50px; font-size: 0.9rem; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s; z-index: 200; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        .toast.show { opacity: 1; }
+
+        /* Desktop Optimization */
+        @media (min-width: 768px) {
+            .container { padding: 2rem; }
+            .bottom-nav {
+                top: 0; bottom: auto; width: auto; left: 1rem;
+                flex-direction: column; background: var(--surface);
+                border-radius: 0 0 16px 16px; padding: 1rem 0.5rem;
+                box-shadow: var(--shadow); border: 1px solid var(--border); border-top: none;
+            }
+            .nav-btn { padding: 10px; border-radius: 12px; }
+            .nav-btn.active { background: #ecfdf5; }
+            body { padding-bottom: 0; padding-top: 80px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 class="app-title">جمعيتي الخيرية</h1>
+    <div class="current-hijri-month" id="headerHijriDate">--</div>
+</header>
+
+<main class="container">
+    
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="view-section">
+        <div class="card turn-card text-center" id="currentTurnCard">
+            <h3>🎉 المستحق للجمعية الآن</h3>
+            <div id="currentTurnContent">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-val" id="statTotal">0</div>
+                <div class="stat-lbl">إجمالي الجمعية</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val" id="statPaid">0</div>
+                <div class="stat-lbl">دفعوا هذا الشهر</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val" id="statCycle">1</div>
+                <div class="stat-lbl">الدورة الحالية</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+            <h3>إجراءات سريعة</h3>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="app.confirmPayout()">✅ إغلاق الشهر وتسليم المبلغ</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- PARTICIPANTS -->
+    <section id="participants" class="view-section hidden">
+        <div class="card">
+            <h3>إضافة عضو جديد</h3>
+            <form onsubmit="app.addMember(event)">
+                <div class="form-group">
+                    <label>الاسم الثلاثي</label>
+                    <input type="text" id="mName" required placeholder="الاسم...">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>الترتيب (الدور)</label>
+                        <input type="number" id="mOrder" min="1" required placeholder="مثال: 1">
+                    </div>
+                    <div class="form-group">
+                        <label>عدد الأسهم</label>
+                        <input type="number" id="mShares" min="1" value="1" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">➕ إضافة للقائمة</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>قائمة الأعضاء</h3>
+            <div id="membersListContainer"></div>
+        </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section id="reports" class="view-section hidden">
+        <!-- Report Tabs -->
+        <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+            <button class="btn btn-outline btn-sm active" onclick="app.switchReport('status')">الحالة الحالية</button>
+            <button class="btn btn-outline btn-sm" onclick="app.switchReport('history')">سجل الاستلام</button>
+            <button class="btn btn-outline btn-sm" onclick="app.switchReport('schedule')">الجدول الزمني</button>
+        </div>
+
+        <!-- 1. Current Status -->
+        <div id="reportStatus" class="report-card">
+            <div class="card">
+                <h3>حالة الدفع والاستحقاق</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>الدور</th>
+                                <th>الأسهم</th>
+                                <th>حالة الدفع</th>
+                                <th>الاستحقاق</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableStatus"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. History -->
+        <div id="reportHistory" class="report-card hidden">
+            <div class="card">
+                <h3>من استلم الجمعية؟ (سجل الدورات)</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>العضو</th>
+                                <th>الدورة رقم</th>
+                                <th>الشهر الهجري</th>
+                                <th>المبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableHistory"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Schedule -->
+        <div id="reportSchedule" class="report-card hidden">
+            <div class="card">
+                <h3>جدول الدورات القادمة (تقديري)</h3>
+                <p style="font-size: 0.85rem; color: var(--text-light);">* يعتمد على تسليم المبالغ بالترتيب شهرياً</p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>مستقبل</th>
+                                <th>الدورة رقم</th>
+                                <th>الشهر الهجري المتوقع</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableSchedule"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="settings" class="view-section hidden">
+        <div class="card">
+            <h3>إعدادات الجمعية</h3>
+            <form onsubmit="app.saveSettings(event)">
+                <div class="form-group">
+                    <label>قيمة السهم الواحد</label>
+                    <input type="number" id="setPrice" required min="1">
+                </div>
+                <div class="form-group">
+                    <label>تاريخ بداية الجمعية</label>
+                    <input type="date" id="setStartDate" required>
+                    <small style="color:var(--text-light)">يستخدم لحساب الأشهر الهجرية بدقة.</small>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>يوم التحصيل (شهري)</label>
+                        <input type="number" id="setPayDay" min="1" max="31" required>
+                    </div>
+                    <div class="form-group">
+                        <label>يوم التوزيع (شهري)</label>
+                        <input type="number" id="setPayoutDay" min="1" max="31" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>منطقة الخطر</h3>
+            <button class="btn btn-danger" onclick="app.resetData()">🗑️ حذف جميع البيانات</button>
+        </div>
+    </section>
+
+</main>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+    <button class="nav-btn active" onclick="app.navigate('dashboard', this)">
+        <i>🏠</i> الرئيسية
+    </button>
+    <button class="nav-btn" onclick="app.navigate('participants', this)">
+        <i>👥</i> الأعضاء
+    </button>
+    <button class="nav-btn" onclick="app.navigate('reports', this)">
+        <i>📊</i> التقارير
+    </button>
+    <button class="nav-btn" onclick="app.navigate('settings', this)">
+        <i>⚙️</i> الإعدادات
+    </button>
+</nav>
+
+<div id="toast" class="toast">تم بنجاح</div>
+
+<script>
+    const app = {
+        data: {
+            settings: {
+                sharePrice: 100,
+                startDate: new Date().toISOString().split('T')[0], // Today
+                payDay: 5,
+                payoutDay: 10
+            },
+            members: [], // { id, name, order, shares, paid, received: bool, receivedCycle: int/null }
+            currentCycle: 1
+        },
+        
+        // Hijri Months Names
+        hijriMonths: [
+            "محرم", "صفر", "ربيع الأول", "ربيع الآخر", 
+            "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", 
+            "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
+        ],
+
+        init() {
+            const stored = localStorage.getItem('jamiaPro_v2');
+            if (stored) {
+                this.data = JSON.parse(stored);
+                // Ensure backward compatibility if startDate is missing
+                if (!this.data.settings.startDate) {
+                    this.data.settings.startDate = new Date().toISOString().split('T')[0];
+                }
+            }
+            this.render();
+        },
+
+        save() {
+            localStorage.setItem('jamiaPro_v2', JSON.stringify(this.data));
+            this.render();
+        },
+
+        // --- Navigation Logic ---
+        navigate(viewId, btn) {
+            // Hide all sections
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            // Show target
+            document.getElementById(viewId).classList.remove('hidden');
+            
+            // Update Nav Buttons
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+
+            this.render();
+        },
+
+        switchReport(tab) {
+            // Hide all report cards
+            document.querySelectorAll('.report-card').forEach(el => el.classList.add('hidden'));
+            // Show selected
+            document.getElementById('report' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
+            
+            // Update button styles
+            const btns = document.querySelectorAll('#reports .btn-outline');
+            btns.forEach(b => {
+                b.classList.remove('active', 'btn-primary');
+                b.classList.add('btn-outline');
+                if(b.textContent.includes(tab === 'status' ? 'الحالة' : tab === 'history' ? 'السجل' : 'الجدول')) {
+                    b.classList.add('active', 'btn-primary');
+                    b.classList.remove('btn-outline');
+                }
+            });
+        },
+
+        // --- Core Functions ---
+        addMember(e) {
+            e.preventDefault();
+            const name = document.getElementById('mName').value;
+            const order = parseInt(document.getElementById('mOrder').value);
+            const shares = parseInt(document.getElementById('mShares').value);
+
+            if(this.data.members.some(m => m.order === order)) {
+                this.showToast('يوجد عضو بهذا الترتيب بالفعل!');
+                return;
+            }
+
+            this.data.members.push({
+                id: Date.now(),
+                name, order, shares,
+                paid: false,
+                received: false,
+                receivedCycle: null
+            });
+            // Sort
+            this.data.members.sort((a,b) => a.order - b.order);
+            
+            this.save();
+            document.getElementById('mName').value = '';
+            this.showToast('تمت إضافة العضو');
+        },
+
+        deleteMember(id) {
+            if(!confirm('حذف العضو نهائياً؟')) return;
+            this.data.members = this.data.members.filter(m => m.id !== id);
+            this.save();
+        },
+
+        togglePay(id) {
+            const m = this.data.members.find(x => x.id === id);
+            if(m) {
+                m.paid = !m.paid;
+                this.save();
+            }
+        },
+
+        saveSettings(e) {
+            e.preventDefault();
+            this.data.settings.sharePrice = parseInt(document.getElementById('setPrice').value);
+            this.data.settings.startDate = document.getElementById('setStartDate').value;
+            this.data.settings.payDay = parseInt(document.getElementById('setPayDay').value);
+            this.data.settings.payoutDay = parseInt(document.getElementById('setPayoutDay').value);
+            this.save();
+            this.showToast('تم تحديث الإعدادات');
+        },
+
+        resetData() {
+            if(confirm('تحذير: سيتم مسح جميع البيانات. هل أنت متأكد؟')) {
+                localStorage.removeItem('jamiaPro_v2');
+                location.reload();
+            }
+        },
+
+        // --- Cycle Logic ---
+        getCurrentRecipient() {
+            // Members who haven't received, sorted by order
+            const pending = this.data.members.filter(m => !m.received).sort((a,b) => a.order - b.order);
+            return pending.length > 0 ? pending[0] : null;
+        },
+
+        confirmPayout() {
+            const recipient = this.getCurrentRecipient();
+            if(!recipient) {
+                alert('اكتملت دورات جميع الأعضاء!');
+                return;
+            }
+            const total = this.data.members.reduce((sum, m) => sum + (m.shares * this.data.settings.sharePrice), 0);
+            
+            if(confirm(`تسليم المبلغ لـ ${recipient.name}؟\nالمبلغ: ${total.toLocaleString()}\nسيتم بدء شهر جديد.`)) {
+                // Logic
+                recipient.received = true;
+                recipient.receivedCycle = this.data.currentCycle;
+                
+                // Reset payments for next cycle
+                this.data.members.forEach(m => m.paid = false);
+                this.data.currentCycle++;
+                
+                this.save();
+                this.showToast('تم إغلاق الشهر بنجاح');
+            }
+        },
+
+        // --- Hijri Helpers ---
+        getHijriMonthName(cycleNumber) {
+            // Determine which Hijri month corresponds to this cycle based on Start Date
+            const startDateObj = new Date(this.data.settings.startDate);
+            
+            // Use Intl API to get the Hijri month (0-11) of the start date
+            // Note: 'numeric' might return '1', we parse it.
+            const startMonthStr = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { month: 'numeric' }).format(startDateObj);
+            // Arabic to Number conversion (e.g., '١' -> 1)
+            const startMonthIndex = parseInt(startMonthStr.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))) - 1; // 0-based index
+
+            // Calculate offset
+            // Cycle 1 = Start Month. Cycle 2 = Start Month + 1.
+            const offset = cycleNumber - 1;
+            const targetIndex = (startMonthIndex + offset) % 12;
+            
+            return this.hijriMonths[targetIndex];
+        },
+
+        // --- Rendering ---
+        render() {
+            // Fill Settings Form
+            document.getElementById('setPrice').value = this.data.settings.sharePrice;
+            document.getElementById('setStartDate').value = this.data.settings.startDate;
+            document.getElementById('setPayDay').value = this.data.settings.payDay;
+            document.getElementById('setPayoutDay').value = this.data.settings.payoutDay;
+
+            // Update Header Current Hijri Date
+            const today = new Date();
+            const hijriStr = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { 
+                day: 'numeric', month: 'long', year: 'numeric' 
+            }).format(today);
+            document.getElementById('headerHijriDate').textContent = hijriStr;
+
+            // 1. Dashboard
+            const recipient = this.getCurrentRecipient();
+            const turnDiv = document.getElementById('currentTurnContent');
+            const totalPot = this.data.members.reduce((sum, m) => sum + (m.shares * this.data.settings.sharePrice), 0);
+            
+            document.getElementById('statTotal').textContent = totalPot.toLocaleString();
+            document.getElementById('statPaid').textContent = this.data.members.filter(m => m.paid).length;
+            document.getElementById('statCycle').textContent = this.data.currentCycle;
+
+            if(recipient) {
+                turnDiv.innerHTML = `
+                    <h2 style="color:var(--primary); margin:0;">${recipient.name}</h2>
+                    <p style="font-size:0.9rem; color:#666;">الترتيب: ${recipient.order} | الأسهم: ${recipient.shares}</p>
+                    <div class="turn-amount">${totalPot.toLocaleString()} ريال</div>
+                    <span class="badge badge-yellow">الدورة ${this.data.currentCycle}</span>
+                `;
+            } else {
+                turnDiv.innerHTML = `<p class="text-center">🎊 انتهت جميع الدورات!</p>`;
+            }
+
+            // 2. Members List
+            const mList = document.getElementById('membersListContainer');
+            mList.innerHTML = '';
+            this.data.members.sort((a,b)=>a.order - b.order).forEach(m => {
+                const isCurrent = recipient && recipient.id === m.id;
+                const div = document.createElement('div');
+                div.className = 'member-row';
+                div.style.background = isCurrent ? '#ecfdf5' : 'transparent';
+                div.style.padding = isCurrent ? '10px' : '8px 0';
+                div.style.borderRadius = isCurrent ? '8px' : '0';
+
+                div.innerHTML = `
+                    <div class="member-info">
+                        <h4>${m.order}. ${m.name} ${isCurrent ? '👈' : ''}</h4>
+                        <div class="member-details">${m.shares} سهم (${(m.shares*this.data.settings.sharePrice).toLocaleString()})</div>
+                    </div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        ${m.received 
+                            ? `<span class="badge badge-blue">استلم دور ${m.receivedCycle}</span>`
+                            : `<button class="btn ${m.paid ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="app.togglePay(${m.id})">
+                                ${m.paid ? '✔ دفع' : 'لم يدفع'}
+                               </button>`
+                        }
+                        <button class="btn btn-danger btn-sm" style="width:auto; padding:0 8px;" onclick="app.deleteMember(${m.id})">×</button>
+                    </div>
+                `;
+                mList.appendChild(div);
+            });
+
+            // 3. Reports
+            // A. Status Table
+            const tbodyStatus = document.getElementById('tableStatus');
+            tbodyStatus.innerHTML = '';
+            this.data.members.sort((a,b)=>a.order - b.order).forEach(m => {
+                let statusHtml = m.received 
+                    ? `<span class="badge badge-blue">استلم (${m.receivedCycle})</span>` 
+                    : (m.paid ? `<span class="badge badge-green">مدفوع</span>` : `<span class="badge badge-yellow">غير مدفوع</span>`);
+                
+                let entitlement = "ينتظر";
+                if(m.received) entitlement = "استلم";
+                else if(recipient && recipient.id === m.id) entitlement = "الدور الحالي";
+
+                const tr = `<tr>
+                    <td>${m.name}</td>
+                    <td>${m.order}</td>
+                    <td>${m.shares}</td>
+                    <td>${statusHtml}</td>
+                    <td>${entitlement}</td>
+                </tr>`;
+                tbodyStatus.innerHTML += tr;
+            });
+
+            // B. History Table
+            const tbodyHist = document.getElementById('tableHistory');
+            tbodyHist.innerHTML = '';
+            const historyMembers = this.data.members.filter(m => m.received).sort((a,b) => a.receivedCycle - b.receivedCycle);
+            historyMembers.forEach(m => {
+                const monthName = this.getHijriMonthName(m.receivedCycle);
+                const amount = this.data.members.reduce((sum, x) => sum + (x.shares * this.data.settings.sharePrice), 0); // Approx amount at time of cycle
+                tbodyHist.innerHTML += `
+                    <tr>
+                        <td>${m.name}</td>
+                        <td>${m.receivedCycle}</td>
+                        <td><span class="badge badge-green">${monthName}</span></td>
+                        <td>${amount.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            // C. Schedule Table
+            const tbodySched = document.getElementById('tableSchedule');
+            tbodySched.innerHTML = '';
+            const futureMembers = this.data.members.filter(m => !m.received).sort((a,b) => a.order - b.order);
+            let tempCycle = this.data.currentCycle;
+            futureMembers.forEach(m => {
+                const monthName = this.getHijriMonthName(tempCycle);
+                tbodySched.innerHTML += `
+                    <tr>
+                        <td>${m.name}</td>
+                        <td>${tempCycle}</td>
+                        <td><span class="badge badge-yellow">${monthName}</span></td>
+                    </tr>
+                `;
+                tempCycle++;
+            });
+        },
+
+        showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        app.init();
+    });
+</script>
+
+</body>
+</html>
+```
